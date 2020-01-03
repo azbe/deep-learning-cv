@@ -50,7 +50,7 @@ def main(dataset_path):
             epochs=100000,
             verbose=1,
             callbacks=[
-                F1ScoreCallback(val_gen, steps=125),
+                F1ScoreCallback(val_gen, steps=125, log_path=os.path.join("models", "f1_log.txt")),
                 keras.callbacks.ModelCheckpoint(os.path.join("models", "model-{epoch:03d}.hdf5"), save_best_only=False),
             ],
             validation_data=val_gen,
