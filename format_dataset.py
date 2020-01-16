@@ -16,9 +16,8 @@ def main(dataset_path):
     labels = [line.strip() for line in labels]
     labels = [(os.path.join(data_dir, "{}.png".format(line.split(",")[0])), int(line.split(",")[1])) for line in labels]
     random.shuffle(labels)
-    print(labels)
-    train_labels = labels[:13000]
-    validation_labels = labels[13000:]
+    train_labels = labels[:15000]
+    validation_labels = labels[15000:]
 
     def makedir_and_subdirs(path):
         os.makedirs(path, exist_ok=True)
@@ -38,7 +37,7 @@ def main(dataset_path):
         os.rename(os.path.join(data_dir, path), os.path.join(test_dir, os.path.basename(path)))
 
     os.removedirs(data_dir)
-    os.removedirs(labels_file)
+    os.remove(labels_file)
     
 
 if __name__ == "__main__":

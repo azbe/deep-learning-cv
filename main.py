@@ -9,7 +9,7 @@ from f1_score_callback import F1ScoreCallback
 
 
 def main(dataset_path):
-    model = keras.applications.ResNet50(include_top=False, weights=None)
+    model = keras.applications.InceptionV3(include_top=False, weights=None)
     inputs, net = model.input, model.output
     net = keras.layers.Dropout(0.5)(net)
     net = keras.layers.GlobalAveragePooling2D()(net)

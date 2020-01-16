@@ -9,7 +9,7 @@ from PIL import Image
 
 
 def main(model_path, dataset_path):
-    model = keras.applications.ResNet50(include_top=False, weights=None)
+    model = keras.applications.InceptionV3(include_top=False, weights=None)
     inputs, net = model.input, model.output
     net = keras.layers.Dropout(0.5)(net)
     net = keras.layers.GlobalAveragePooling2D()(net)
@@ -28,4 +28,4 @@ def main(model_path, dataset_path):
 
 
 if __name__ == "__main__":
-    main("models/model-1206.hdf5", "data/test")
+    main("models/model-102.hdf5", "data/test")
