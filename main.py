@@ -30,7 +30,7 @@ def main(dataset, model, dropout, bias_init, learning_rate, class_weights, metri
     dataset = Dataset(dataset)
     dataset.build()
 
-    model = Model(model, dropout, bias_init, class_weights, optimizer_args={"learning_rate": learning_rate}, metrics=metrics)
+    model = Model(model, dropout, bias_init, class_weights, learning_rate, metrics)
     model.build()
     
     model.train(dataset.train_gen, dataset.val_gen, epochs, save_path)
@@ -40,8 +40,6 @@ def main(dataset, model, dropout, bias_init, learning_rate, class_weights, metri
     fd.close()
 
 
-# -1.748545323 bias init
-# {0: 0.587013456, 1: 3.373118838} class weight
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
