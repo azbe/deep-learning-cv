@@ -43,7 +43,7 @@ def main(dataset_path, train_imgs, random_seed):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("dataset_path", type=str, help="Path to dataset.")
-    parser.add_argument("--train_imgs", type=int, default=15000 help="How many training files to keep in the training set.")
+    parser.add_argument("--train_imgs", type=int, default=15000, help="How many training files to keep in the training set.")
     parser.add_argument("--random_seed", type=int, default=30941, help="Random seed to use.")
     args, _ = parser.parse_known_args()
     main(**vars(args))
