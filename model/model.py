@@ -58,3 +58,9 @@ class Model:
                 verbose=2)
         except KeyboardInterrupt:
             pass
+
+    def load_weights(self, *args, **kwargs):
+        return self.model.load_weights(*args, **kwargs)
+    
+    def predict(self, *args, **kwargs):
+        return self.model.predict(*args, **kwargs)
