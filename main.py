@@ -1,67 +1,59 @@
 import argparse
 import os
 import pdb
+import sys
 
 import keras
 import tensorflow
 
-from f1_score_callback import F1ScoreCallback
+from dataset.dataset import Dataset
+from model.models import Models
+from model.metrics import Metrics
+from model.model import Model
+from util.logger import Logger
+from util.datetime import timestamp
 
 
-def main(dataset_path):
-    model = keras.applications.InceptionV3(include_top=False, weights=None)
-    inputs, net = model.input, model.output
-    net = keras.layers.Dropout(0.5)(net)
-    net = keras.layers.GlobalAveragePooling2D()(net)
-    net = keras.layers.Dense(1, activation=keras.activations.sigmoid, bias_initializer=keras.initializers.Constant([-1.748545323]))(net)
-    model = keras.models.Model(inputs=inputs, outputs=net)
-    model.compile(
-        optimizer=keras.optimizers.Adam(learning_rate=0.001),
-        loss=keras.losses.binary_crossentropy,
-        metrics=[
-            keras.metrics.Recall(name="recall"),
-            keras.metrics.Precision(name="precision"),
-            keras.metrics.BinaryAccuracy(name="accuracy"),
-            keras.metrics.AUC(name="auc"),
-        ])
+def main(dataset, model, dropout, bias_init, learning_rate, class_weights, metrics, epochs, save_path, log_path):
+    args = locals()
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
+    logger = Logger(__name__)
+    fd = open(log_path, "a")
+    old_fd = sys.stdout
+    # sys.stdout = fd
+    logger.logger.info("Begin")
+    print(" ".join(["--{} {}".format(key, str(val) if not isinstance(val, list) else " ".join(map(str, val))) 
+          for key, val in args.items()]))
+
+    dataset = Dataset(dataset)
+    dataset.build()
+
+    model = Model(model, dropout, bias_init, class_weights, optimizer_args={"learning_rate": learning_rate}, metrics=metrics)
+    model.build()
     
-    train_gen = keras.preprocessing.image.ImageDataGenerator(
-        rescale=1./255.,
-        horizontal_flip=True,
-        vertical_flip=True)
-    train_gen = train_gen.flow_from_directory(
-        os.path.join(dataset_path, "train"), 
-        batch_size=32,
-        target_size=(224, 224),
-        class_mode="binary",
-        shuffle=True)
+    model.train(dataset.train_gen, dataset.val_gen, epochs, save_path)
 
-    val_gen = keras.preprocessing.image.ImageDataGenerator(rescale=1./255.)
-    val_gen = val_gen.flow_from_directory(
-        os.path.join(dataset_path, "validation"), 
-        batch_size=32,
-        target_size=(224, 224),
-        class_mode="binary",
-        shuffle=True)
-
-    try:
-        model.fit_generator(
-            train_gen, 
-            epochs=100000,
-            verbose=1,
-            callbacks=[
-                F1ScoreCallback(val_gen, steps=125, log_path=os.path.join("models", "f1_log.txt")),
-                keras.callbacks.ModelCheckpoint(os.path.join("models", "model-{epoch:03d}.hdf5"), save_best_only=False),
-            ],
-            validation_data=val_gen,
-            validation_steps=125,
-            class_weight={0: 0.587013456, 1: 3.373118838},)
-    except KeyboardInterrupt:
-        pass
+    logger.logger.info("End")
+    sys.stdout = old_fd
+    fd.close()
 
 
+# -1.748545323 bias init
+# {0: 0.587013456, 1: 3.373118838} class weight
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset_path", type=str, default="./data")
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("--dataset", type=str, default="./data", help="Path to dataset")
+    parser.add_argument("--model", type=Models, choices=list(Models), default=Models.RESNET50, help="Which base model to use")
+    parser.add_argument("--dropout", type=float, help="Dropout rate (leave blank for no dropout)")
+    parser.add_argument("--bias_init", type=float, help="Bias initializer to use for the last layer")
+    parser.add_argument("--learning_rate", type=float, default=1e-3, help="Learning rate to use")
+    parser.add_argument("--class_weights", type=float, nargs=2, help="Class weights to use for training")
+    parser.add_argument("--metrics", type=Metrics, choices=list(Metrics), nargs="*", help="Which metrics to use for evaluation (F1 is on by default)")
+    parser.add_argument("--epochs", type=int, default=2**64, help="Number of epochs to train for.")
+    parser.add_argument("--save_path", type=str, default="./output/{}/model-{}.hdf5".format(timestamp(), "{epoch:03d}"), help="Path to save models to")
+    parser.add_argument("--log_path", type=str, default="./output/{}/log.txt".format(timestamp()), help="Path to save logs to")
     args, _ = parser.parse_known_args()
     main(**vars(args))
