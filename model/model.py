@@ -19,7 +19,7 @@ class Model:
         self._logger = Logger(__name__)
     
     def build(self):
-        self._logger.logger.info("Building model")
+        self._logger.logger.info("Building model \"{}\"".format(str(self.model)))
         model = self.model.get_model()(include_top=False, weights=None)
         inputs, net = model.input, model.output
         
@@ -44,7 +44,6 @@ class Model:
             optimizer=keras.optimizers.Adam(**self.optimizer_args),
             loss=keras.losses.binary_crossentropy,
             metrics=[metric.get_metric()(name=str(metric)) for metric in self.metrics])
-        self.model.summary()
     
     def train(self, train_gen, val_gen, epochs, save_path):
         try:
@@ -56,13 +55,12 @@ class Model:
                 steps_per_epoch=1,
                 epochs=epochs,
                 callbacks=[
-                    keras.callbacks.BaseLogger(),
                     F1ScoreCallback(val_gen, steps=125),
                     keras.callbacks.ModelCheckpoint(save_path, save_best_only=False),
                 ],
                 validation_data=val_gen,
                 validation_steps=125,
                 class_weight=class_weights,
-                verbose=0)
+                verbose=2)
         except KeyboardInterrupt:
             pass

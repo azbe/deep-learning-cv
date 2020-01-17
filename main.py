@@ -22,7 +22,7 @@ def main(dataset, model, dropout, bias_init, learning_rate, class_weights, metri
     logger = Logger(__name__)
     fd = open(log_path, "a")
     old_fd = sys.stdout
-    # sys.stdout = fd
+    sys.stdout = fd
     logger.logger.info("Begin")
     print(" ".join(["--{} {}".format(key, str(val) if not isinstance(val, list) else " ".join(map(str, val))) 
           for key, val in args.items()]))
